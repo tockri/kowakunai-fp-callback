@@ -86,7 +86,7 @@ router.post("/post", async (req, res) => {
     data
   })
 
-  res.render("redirect")
+  res.redirect("/")
 })
 
 export default router
