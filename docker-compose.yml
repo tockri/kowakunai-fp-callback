@@ -1,0 +1,13 @@
+version: '3'
+services:
+  db:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: kowakunai
+      MYSQL_USER: kowakunai_fp
+      MYSQL_PASSWORD: kowakunai_fp
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf

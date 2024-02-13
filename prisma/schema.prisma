@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model MessageDao {
+  id  Int  @id @default(autoincrement())
+  content  String @db.Text
+  parentId  Int? @map("parent_id")
+  parent MessageDao? @relation("ParentChildren", fields: [parentId], references: [id])
+  children MessageDao[] @relation("ParentChildren")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("message")
+}
