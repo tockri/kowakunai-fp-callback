@@ -1,0 +1,13 @@
+<li>
+  <label for="parentId-<%= message.id %>">
+    <input type="radio" name="parentId" id="parentId-<%= message.id %>" value="<%= message.id %>">
+  <%= message.content %>
+  </label>
+  <% if (message.children) {%>
+    <ul>
+    <% for (const child of message.children) { %>
+      <%- include('message', {message:child}) %>
+    <% } %>
+    </ul>
+  <% } %>
+</li>
