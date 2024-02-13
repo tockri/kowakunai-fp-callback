@@ -10,15 +10,18 @@ type MessageNode = MessageDao & {
 }
 
 router.get("/", async (req, res) => {
+  // DBからレコード一覧を取得
   const messageList = await prisma.messageDao.findMany({
     orderBy: { id: Prisma.SortOrder.asc }
   })
 
+  // ツリーに変換する前準備
   const nodeMap: Map<number, MessageNode> = new Map()
   for (const message of messageList) {
     nodeMap.set(message.id, { ...message, children: [] })
   }
 
+  // ツリー構造にする
   const messages: MessageNode[] = []
   for (const node of nodeMap.values()) {
     if (node.parentId) {
@@ -28,6 +31,7 @@ router.get("/", async (req, res) => {
     }
   }
 
+  // Viewに渡す
   res.render("index", { messages })
 })
 
