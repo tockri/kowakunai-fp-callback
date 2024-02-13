@@ -6,7 +6,12 @@
     <title>BBS</title>
   </head>
   <body>
-    <a href="/logout">ログアウト</a>
+    
+    <form action="/" method="get">
+      <input type="text" name="query" id="bbs-query" value="<%= query %>">
+      <button type="submit">検索</button>
+      <a href="/logout">ログアウト</a>
+    </form>
     <form action="/post" method="post">
       <ul>
       <% for (const message of messages) {%>

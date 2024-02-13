@@ -1,5 +1,6 @@
 import express from "express"
 import { MessageDao, Prisma, PrismaClient } from "@prisma/client"
+import { body, validationResult } from "express-validator"
 
 const prisma = new PrismaClient()
 
@@ -36,13 +37,24 @@ type MessageNode = MessageDao & {
 }
 
 router.get("/", async (req, res) => {
+  // ログインチェック
   if (req.cookies.loggedIn !== "true") {
     res.redirect("/login")
     return
   }
 
+  // 検索文字列
+  const query = req.query.query as string | undefined
+
   // DBからレコード一覧を取得
   const messageList = await prisma.messageDao.findMany({
+    where: query
+      ? {
+          content: {
+            contains: query
+          }
+        }
+      : undefined,
     orderBy: { id: Prisma.SortOrder.asc }
   })
 
@@ -55,15 +67,16 @@ router.get("/", async (req, res) => {
   // ツリー構造にする
   const messages: MessageNode[] = []
   for (const node of nodeMap.values()) {
-    if (node.parentId) {
-      nodeMap.get(node.parentId)?.children.push(node)
+    const parent = (node.parentId && nodeMap.get(node.parentId)) || null
+    if (parent) {
+      parent.children.push(node)
     } else {
       messages.push(node)
     }
   }
 
   // Viewに渡す
-  res.render("index", { messages })
+  res.render("index", { messages, query })
 })
 
 type PostBody = {
@@ -71,22 +84,42 @@ type PostBody = {
   parentId: string
 }
 
-router.post("/post", async (req, res) => {
-  if (req.cookies.loggedIn !== "true") {
-    res.redirect("/login")
-    return
-  }
+router.post(
+  "/post",
+  body("content").exists(),
+  body("parentId").matches(/^\d*$/),
+  async (req, res) => {
+    // ログインチェック
+    if (req.cookies.loggedIn !== "true") {
+      res.redirect("/login")
+      return
+    }
 
-  const body = req.body as PostBody
-  const data = {
-    content: body.content,
-    parentId: body.parentId ? parseInt(body.parentId) : null
-  }
-  await prisma.messageDao.create({
-    data
-  })
+    // 入力値バリデーション
+    const error = validationResult(req)
+    if (!error.isEmpty()) {
+      res.status(400).send({ errors: error.array() })
+      return
+    }
 
-  res.redirect("/")
-})
+    const body = req.body as PostBody
+
+    // DBに登録
+    const data = {
+      content: body.content,
+      parentId:
+        (body.parentId &&
+          body.parentId.match(/^\d+$/) &&
+          parseInt(body.parentId)) ||
+        null
+    }
+    await prisma.messageDao.create({
+      data
+    })
+
+    // レスポンス
+    res.redirect("/")
+  }
+)
 
 export default router
