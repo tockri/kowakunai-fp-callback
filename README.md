@@ -1,5 +1,7 @@
 # kowakunai-fp-callback
 
+[こわくない関数型プログラミング 実例：バックエンド処理のロジックを純粋関数にする](https://zenn.dev/tockri/books/dcaf6c55e64448/viewer/pure_func_1)のソースコードです。
+
 ## セットアップ
 
 1. [bun](https://bun.sh/)をインストール
