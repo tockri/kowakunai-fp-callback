@@ -5,11 +5,42 @@ const prisma = new PrismaClient()
 
 const router = express.Router()
 
+router.get("/login", (req, res) => {
+  if (req.cookies.loggedIn === "true") {
+    res.redirect("/")
+  } else {
+    res.render("login")
+  }
+})
+
+router.post("/login", (req, res) => {
+  res.cookie("loggedIn", "true", {
+    maxAge: 1000 * 5 * 60,
+    path: "/",
+    httpOnly: true
+  })
+  res.redirect("/")
+})
+
+router.get("/logout", (req, res) => {
+  res.cookie("loggedIn", "", {
+    expires: new Date("1970-01-01 00:00:00"),
+    path: "/",
+    httpOnly: true
+  })
+  res.redirect("/login")
+})
+
 type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
 router.get("/", async (req, res) => {
+  if (req.cookies.loggedIn !== "true") {
+    res.redirect("/login")
+    return
+  }
+
   // DBからレコード一覧を取得
   const messageList = await prisma.messageDao.findMany({
     orderBy: { id: Prisma.SortOrder.asc }
@@ -41,6 +72,11 @@ type PostBody = {
 }
 
 router.post("/post", async (req, res) => {
+  if (req.cookies.loggedIn !== "true") {
+    res.redirect("/login")
+    return
+  }
+
   const body = req.body as PostBody
   const data = {
     content: body.content,
