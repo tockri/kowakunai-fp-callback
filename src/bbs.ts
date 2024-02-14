@@ -1,4 +1,5 @@
 import express from "express"
+import { Request } from "express"
 import { MessageDao, Prisma, PrismaClient } from "@prisma/client"
 import { body, validationResult } from "express-validator"
 import { authenticated } from "./authentication"
@@ -37,8 +38,9 @@ export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
-router.get("/", (req, res) =>
-  authenticated(req, res, async () => {
+router.get(
+  "/",
+  authenticated(async (req, res) => {
     // 検索文字列
     const query = req.query.query as string | undefined
 
@@ -106,33 +108,32 @@ router.post(
   "/post",
   body("content").exists(),
   body("parentId").matches(/^\d*$/),
-  (req, res) =>
-    authenticated(req, res, async () => {
-      // 入力値バリデーション
-      const error = validationResult(req)
-      if (!error.isEmpty()) {
-        res.status(400).send({ errors: error.array() })
-        return
-      }
+  authenticated(async (req, res) => {
+    // 入力値バリデーション
+    const error = validationResult(req)
+    if (!error.isEmpty()) {
+      res.status(400).send({ errors: error.array() })
+      return
+    }
 
-      const body = req.body as PostBody
+    const body = req.body as PostBody
 
-      // DBに登録
-      const data = {
-        content: body.content,
-        parentId:
-          (body.parentId &&
-            body.parentId.match(/^\d+$/) &&
-            parseInt(body.parentId)) ||
-          null
-      }
-      await prisma.messageDao.create({
-        data
-      })
-
-      // レスポンス
-      res.redirect("/")
+    // DBに登録
+    const data = {
+      content: body.content,
+      parentId:
+        (body.parentId &&
+          body.parentId.match(/^\d+$/) &&
+          parseInt(body.parentId)) ||
+        null
+    }
+    await prisma.messageDao.create({
+      data
     })
+
+    // レスポンス
+    res.redirect("/")
+  })
 )
 
 export default router
