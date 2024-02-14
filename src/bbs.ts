@@ -37,8 +37,8 @@ export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
-router.get("/", async (req, res) => {
-  await authenticated(req, res, async () => {
+router.get("/", (req, res) =>
+  authenticated(req, res, async () => {
     // 検索文字列
     const query = req.query.query as string | undefined
 
@@ -53,7 +53,7 @@ router.get("/", async (req, res) => {
     // Viewに渡す
     res.render("index", { messages, query })
   })
-})
+)
 
 /**
  * @param query req.query.query
@@ -106,8 +106,8 @@ router.post(
   "/post",
   body("content").exists(),
   body("parentId").matches(/^\d*$/),
-  async (req, res) => {
-    await authenticated(req, res, async () => {
+  (req, res) =>
+    authenticated(req, res, async () => {
       // 入力値バリデーション
       const error = validationResult(req)
       if (!error.isEmpty()) {
@@ -133,7 +133,6 @@ router.post(
       // レスポンス
       res.redirect("/")
     })
-  }
 )
 
 export default router
