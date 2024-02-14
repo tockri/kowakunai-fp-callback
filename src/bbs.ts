@@ -32,7 +32,7 @@ router.get("/logout", (req, res) => {
   res.redirect("/login")
 })
 
-type MessageNode = MessageDao & {
+export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
