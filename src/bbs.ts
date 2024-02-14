@@ -1,6 +1,7 @@
 import express from "express"
 import { MessageDao, Prisma, PrismaClient } from "@prisma/client"
 import { body, validationResult } from "express-validator"
+import { authenticated } from "./authentication"
 
 const prisma = new PrismaClient()
 
@@ -37,25 +38,21 @@ export type MessageNode = MessageDao & {
 }
 
 router.get("/", async (req, res) => {
-  // ログインチェック
-  if (req.cookies.loggedIn !== "true") {
-    res.redirect("/login")
-    return
-  }
+  await authenticated(req, res, async () => {
+    // 検索文字列
+    const query = req.query.query as string | undefined
 
-  // 検索文字列
-  const query = req.query.query as string | undefined
+    // DBからレコード一覧を取得
+    const messageList = await prisma.messageDao.findMany(
+      makeFindManyArgsForMessageList(query)
+    )
 
-  // DBからレコード一覧を取得
-  const messageList = await prisma.messageDao.findMany(
-    makeFindManyArgsForMessageList(query)
-  )
+    // ツリー構造にする
+    const messages = buildMessageNodes(messageList)
 
-  // ツリー構造にする
-  const messages = buildMessageNodes(messageList)
-
-  // Viewに渡す
-  res.render("index", { messages, query })
+    // Viewに渡す
+    res.render("index", { messages, query })
+  })
 })
 
 /**
@@ -110,36 +107,32 @@ router.post(
   body("content").exists(),
   body("parentId").matches(/^\d*$/),
   async (req, res) => {
-    // ログインチェック
-    if (req.cookies.loggedIn !== "true") {
-      res.redirect("/login")
-      return
-    }
+    await authenticated(req, res, async () => {
+      // 入力値バリデーション
+      const error = validationResult(req)
+      if (!error.isEmpty()) {
+        res.status(400).send({ errors: error.array() })
+        return
+      }
 
-    // 入力値バリデーション
-    const error = validationResult(req)
-    if (!error.isEmpty()) {
-      res.status(400).send({ errors: error.array() })
-      return
-    }
+      const body = req.body as PostBody
 
-    const body = req.body as PostBody
+      // DBに登録
+      const data = {
+        content: body.content,
+        parentId:
+          (body.parentId &&
+            body.parentId.match(/^\d+$/) &&
+            parseInt(body.parentId)) ||
+          null
+      }
+      await prisma.messageDao.create({
+        data
+      })
 
-    // DBに登録
-    const data = {
-      content: body.content,
-      parentId:
-        (body.parentId &&
-          body.parentId.match(/^\d+$/) &&
-          parseInt(body.parentId)) ||
-        null
-    }
-    await prisma.messageDao.create({
-      data
+      // レスポンス
+      res.redirect("/")
     })
-
-    // レスポンス
-    res.redirect("/")
   }
 )
 
