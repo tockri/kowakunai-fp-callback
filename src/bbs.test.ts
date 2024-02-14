@@ -33,35 +33,32 @@ describe("bbs#buildMessageNodes", () => {
     expect(bbs.buildMessageNodes([])).toStrictEqual([])
   })
 
-  const message1: MessageDao = {
-    id: 1,
-    content: "message-1",
-    createdAt: new Date(2020, 1, 1),
-    parentId: null
-  }
-  const message2: MessageDao = {
-    id: 2,
-    content: "message-2",
-    createdAt: new Date(2020, 1, 2),
-    parentId: null
-  }
-  const message3: MessageDao = {
-    id: 3,
-    content: "message-3",
-    createdAt: new Date(2020, 1, 3),
-    parentId: 1
-  }
-  const message4: MessageDao = {
-    id: 4,
-    content: "message-4",
-    createdAt: new Date(2020, 1, 4),
-    parentId: 3
-  }
-  const node1Empty: MessageNode = { ...message1, children: [] }
-  const node2: MessageNode = { ...message2, children: [] }
-  const node4: MessageNode = { ...message4, children: [] }
-  const node3: MessageNode = { ...message3, children: [node4] }
-  const node1Children: MessageNode = { ...message1, children: [node3] }
+  const testMes = (
+    id: number,
+    date: number,
+    parentId?: number
+  ): MessageDao => ({
+    id,
+    content: `message=${id}`,
+    createdAt: new Date(2020, 1, date),
+    parentId: parentId || null
+  })
+  const message1 = testMes(1, 1)
+  const message2 = testMes(2, 2)
+  const message3 = testMes(3, 3, 1)
+  const message4 = testMes(4, 4, 3)
+  const message5 = testMes(5, 5, 1)
+
+  const testNode = (
+    m: MessageDao,
+    ...children: MessageNode[]
+  ): MessageNode => ({ ...m, children })
+  const node1Empty = testNode(message1)
+  const node2 = testNode(message2)
+  const node4 = testNode(message4)
+  const node3 = testNode(message3, node4)
+  const node5 = testNode(message5)
+  const node1Tree = testNode(message1, node3, node5)
 
   test("simple list", () => {
     expect(bbs.buildMessageNodes([message1, message2])).toStrictEqual([
@@ -78,7 +75,7 @@ describe("bbs#buildMessageNodes", () => {
 
   test("depth 2 tree", () => {
     expect(
-      bbs.buildMessageNodes([message1, message2, message3, message4])
-    ).toStrictEqual([node1Children, node2])
+      bbs.buildMessageNodes([message1, message2, message3, message4, message5])
+    ).toStrictEqual([node1Tree, node2])
   })
 })
