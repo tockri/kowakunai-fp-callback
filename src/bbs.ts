@@ -47,7 +47,25 @@ router.get("/", async (req, res) => {
   const query = req.query.query as string | undefined
 
   // DBからレコード一覧を取得
-  const messageList = await prisma.messageDao.findMany({
+  const messageList = await prisma.messageDao.findMany(
+    makeFindManyArgsForMessageList(query)
+  )
+
+  // ツリー構造にする
+  const messages = buildMessageNodes(messageList)
+
+  // Viewに渡す
+  res.render("index", { messages, query })
+})
+
+/**
+ * @param query req.query.query
+ * @returns prisma.messageDao.findManyの引数
+ */
+const makeFindManyArgsForMessageList = (
+  query: string | undefined
+): Prisma.MessageDaoFindManyArgs => {
+  return {
     where: query
       ? {
           content: {
@@ -56,28 +74,31 @@ router.get("/", async (req, res) => {
         }
       : undefined,
     orderBy: { id: Prisma.SortOrder.asc }
-  })
+  }
+}
 
-  // ツリーに変換する前準備
+/**
+ * @param messageList DBから取得した配列
+ * @returns ツリー構造
+ */
+const buildMessageNodes = (messageList: MessageDao[]): MessageNode[] => {
   const nodeMap: Map<number, MessageNode> = new Map()
   for (const message of messageList) {
     nodeMap.set(message.id, { ...message, children: [] })
   }
 
   // ツリー構造にする
-  const messages: MessageNode[] = []
+  const nodes: MessageNode[] = []
   for (const node of nodeMap.values()) {
     const parent = (node.parentId && nodeMap.get(node.parentId)) || null
     if (parent) {
       parent.children.push(node)
     } else {
-      messages.push(node)
+      nodes.push(node)
     }
   }
-
-  // Viewに渡す
-  res.render("index", { messages, query })
-})
+  return nodes
+}
 
 type PostBody = {
   content: string
@@ -123,3 +144,8 @@ router.post(
 )
 
 export default router
+
+export const Bbs_ForTest = {
+  makeFindManyArgsForMessageList,
+  buildMessageNodes
+}
