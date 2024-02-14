@@ -33,6 +33,7 @@ describe("bbs#buildMessageNodes", () => {
     expect(bbs.buildMessageNodes([])).toStrictEqual([])
   })
 
+  // MessageDaoオブジェクトを短いコードで作るテスト用関数
   const testMes = (
     id: number,
     date: number,
@@ -49,6 +50,7 @@ describe("bbs#buildMessageNodes", () => {
   const message4 = testMes(4, 4, 3)
   const message5 = testMes(5, 5, 1)
 
+  // MessageNodeオブジェクトを短いコードで作るテスト用関数
   const testNode = (
     m: MessageDao,
     ...children: MessageNode[]
