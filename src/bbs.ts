@@ -38,24 +38,21 @@ export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
-router.get(
-  "/",
-  authenticated(async (req, res) => {
-    // 検索文字列
-    const query = req.query.query as string | undefined
+router.get("/", authenticated, async (req, res) => {
+  // 検索文字列
+  const query = req.query.query as string | undefined
 
-    // DBからレコード一覧を取得
-    const messageList = await prisma.messageDao.findMany(
-      makeFindManyArgsForMessageList(query)
-    )
+  // DBからレコード一覧を取得
+  const messageList = await prisma.messageDao.findMany(
+    makeFindManyArgsForMessageList(query)
+  )
 
-    // ツリー構造にする
-    const messages = buildMessageNodes(messageList)
+  // ツリー構造にする
+  const messages = buildMessageNodes(messageList)
 
-    // Viewに渡す
-    res.render("index", { messages, query })
-  })
-)
+  // Viewに渡す
+  res.render("index", { messages, query })
+})
 
 /**
  * @param query req.query.query
@@ -108,7 +105,8 @@ router.post(
   "/post",
   body("content").exists(),
   body("parentId").matches(/^\d*$/),
-  authenticated(async (req, res) => {
+  authenticated,
+  async (req, res) => {
     // 入力値バリデーション
     const error = validationResult(req)
     if (!error.isEmpty()) {
@@ -133,7 +131,7 @@ router.post(
 
     // レスポンス
     res.redirect("/")
-  })
+  }
 )
 
 export default router

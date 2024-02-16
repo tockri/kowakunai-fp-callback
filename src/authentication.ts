@@ -1,11 +1,13 @@
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 
-export const authenticated =
-  (callback: (req: Request, res: Response) => Promise<void> | void) =>
-  async (req: Request, res: Response): Promise<void> => {
-    if (req.cookies.loggedIn === "true") {
-      await callback(req, res)
-    } else {
-      res.redirect("/login")
-    }
+export const authenticated = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.cookies.loggedIn === "true") {
+    next()
+  } else {
+    res.redirect("/login")
   }
+}
