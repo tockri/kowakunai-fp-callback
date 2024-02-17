@@ -140,7 +140,6 @@ const makeCreateArgsForPostMessage = (
 export default router
 
 export const Bbs_ForTest = {
-  makeFindManyArgsForMessageList,
   buildMessageNodes,
   indexLogic,
   makeCreateArgsForPostMessage
