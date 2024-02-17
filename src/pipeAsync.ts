@@ -41,12 +41,12 @@ export function pipeAsync<T1, T2, T3, T4, T5, T6, T7>(
 ): Promise<T7>
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function pipeAsync(
+export async function pipeAsync(
   first: any,
   ...funcs: ((a: any) => OrP<any>)[]
 ): Promise<any> {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   return funcs && funcs.length
     ? funcs.reduce(async (result, next) => next(await result), first)
-    : Promise.resolve(first)
+    : first
 }
