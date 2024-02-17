@@ -39,11 +39,11 @@ export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
-router.get("/", authenticated, async (req, res) =>
+router.get("/", authenticated, (req, res) =>
   indexLogic(
     req.query.query as string | undefined,
     prisma.messageDao.findMany
-  ).then(([view, params]) => res.render(view, params))
+  ).then((result) => res.render(...result))
 )
 
 type IndexLogicResult = [
