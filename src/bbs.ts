@@ -89,7 +89,7 @@ const makeFindManyArgsForMessageList = (
  */
 const buildMessageNodes = (messageList: MessageDao[]): MessageNode[] => {
   console.log({ messageList })
-  const nodeMap: Map<number, MessageNode> = new Map()
+  const nodeMap: Map<number, MessageNode> = new Map<number, MessageNode>()
   for (const message of messageList) {
     nodeMap.set(message.id, { ...message, children: [] })
   }
@@ -107,9 +107,9 @@ const buildMessageNodes = (messageList: MessageDao[]): MessageNode[] => {
   return nodes
 }
 
-type PostBody = {
-  content: string
-  parentId: string
+interface PostBody {
+  readonly content: string
+  readonly parentId: string
 }
 
 router.post(
