@@ -46,12 +46,15 @@ router.get("/", authenticated, async (req, res) =>
   ).then(([view, params]) => res.render(view, params))
 )
 
+type IndexLogicResult = [
+  string,
+  { messages: MessageNode[]; query: string | undefined }
+]
+
 const indexLogic = async (
   query: string | undefined,
   findMany: (args: Prisma.MessageDaoFindManyArgs) => Promise<MessageDao[]>
-): Promise<
-  [string, { messages: MessageNode[]; query: string | undefined }]
-> => {
+): Promise<IndexLogicResult> => {
   const messageList = await findMany(makeFindManyArgsForMessageList(query))
   const messages = buildMessageNodes(messageList)
   return ["index", { messages, query }]
