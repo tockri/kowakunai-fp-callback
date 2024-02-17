@@ -3,6 +3,7 @@ import { Request } from "express"
 import { MessageDao, Prisma, PrismaClient } from "@prisma/client"
 import { body, validationResult } from "express-validator"
 import { authenticated } from "./authentication"
+import { validated } from "./validation"
 
 const prisma = new PrismaClient()
 
@@ -38,21 +39,23 @@ export type MessageNode = MessageDao & {
   children: MessageNode[]
 }
 
-router.get("/", authenticated, async (req, res) => {
-  // 検索文字列
-  const query = req.query.query as string | undefined
+router.get("/", authenticated, async (req, res) =>
+  indexLogic(
+    req.query.query as string | undefined,
+    prisma.messageDao.findMany
+  ).then(([view, params]) => res.render(view, params))
+)
 
-  // DBからレコード一覧を取得
-  const messageList = await prisma.messageDao.findMany(
-    makeFindManyArgsForMessageList(query)
-  )
-
-  // ツリー構造にする
+const indexLogic = async (
+  query: string | undefined,
+  findMany: (args: Prisma.MessageDaoFindManyArgs) => Promise<MessageDao[]>
+): Promise<
+  [string, { messages: MessageNode[]; query: string | undefined }]
+> => {
+  const messageList = await findMany(makeFindManyArgsForMessageList(query))
   const messages = buildMessageNodes(messageList)
-
-  // Viewに渡す
-  res.render("index", { messages, query })
-})
+  return ["index", { messages, query }]
+}
 
 /**
  * @param query req.query.query
@@ -106,37 +109,33 @@ router.post(
   body("content").exists(),
   body("parentId").matches(/^\d*$/),
   authenticated,
+  validated,
   async (req, res) => {
-    // 入力値バリデーション
-    const error = validationResult(req)
-    if (!error.isEmpty()) {
-      res.status(400).send({ errors: error.array() })
-      return
-    }
-
     const body = req.body as PostBody
-
-    // DBに登録
-    const data = {
-      content: body.content,
-      parentId:
-        (body.parentId &&
-          body.parentId.match(/^\d+$/) &&
-          parseInt(body.parentId)) ||
-        null
-    }
-    await prisma.messageDao.create({
-      data
-    })
-
-    // レスポンス
+    await prisma.messageDao.create(makeCreateArgsForPostMessage(body))
     res.redirect("/")
   }
 )
+
+const makeCreateArgsForPostMessage = (
+  body: PostBody
+): Prisma.MessageDaoCreateArgs => {
+  const data = {
+    content: body.content,
+    parentId:
+      (body.parentId &&
+        body.parentId.match(/^\d+$/) &&
+        parseInt(body.parentId)) ||
+      null
+  }
+  return { data }
+}
 
 export default router
 
 export const Bbs_ForTest = {
   makeFindManyArgsForMessageList,
-  buildMessageNodes
+  buildMessageNodes,
+  indexLogic,
+  makeCreateArgsForPostMessage
 }
