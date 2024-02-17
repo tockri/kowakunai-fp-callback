@@ -48,7 +48,10 @@ router.get("/", authenticated, async (req, res) =>
 
 type IndexLogicResult = [
   string,
-  { messages: MessageNode[]; query: string | undefined }
+  {
+    messages: MessageNode[]
+    query: string | undefined
+  }
 ]
 
 const indexLogic = async (
