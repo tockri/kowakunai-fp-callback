@@ -118,11 +118,13 @@ router.post(
   body("parentId").matches(/^\d*$/),
   authenticated,
   validated,
-  async (req, res) => {
-    const body = req.body as PostBody
-    await prisma.messageDao.create(makeCreateArgsForPostMessage(body))
-    res.redirect("/")
-  }
+  (req, res) =>
+    pipeAsync(
+      req.body as PostBody,
+      makeCreateArgsForPostMessage,
+      prisma.messageDao.create,
+      () => res.redirect("/")
+    )
 )
 
 const makeCreateArgsForPostMessage = (
