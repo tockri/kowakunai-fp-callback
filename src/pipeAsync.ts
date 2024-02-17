@@ -48,5 +48,5 @@ export function pipeAsync(
   /* eslint-disable @typescript-eslint/no-explicit-any */
   return funcs && funcs.length
     ? funcs.reduce(async (result, next) => next(await result), first)
-    : first
+    : Promise.resolve(first)
 }
