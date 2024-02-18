@@ -31,7 +31,7 @@ const node1Tree = testNode(message1, node3, node5)
 
 describe("bbs#indexLogic", () => {
   test("simple query", async () => {
-    const [view, params] = await bbs.indexLogic("test", (args) => {
+    const [view, params] = await bbs.indexLogic((args) => {
       expect(args).toStrictEqual({
         where: {
           content: {
@@ -41,7 +41,7 @@ describe("bbs#indexLogic", () => {
         orderBy: { id: Prisma.SortOrder.asc }
       })
       return Promise.resolve([message1, message2])
-    })
+    })("test")
     expect(view).toBe("index")
     expect(params).toStrictEqual({
       query: "test",
@@ -50,13 +50,13 @@ describe("bbs#indexLogic", () => {
   })
 
   test("empty query", async () => {
-    const [view, params] = await bbs.indexLogic(undefined, (args) => {
+    const [view, params] = await bbs.indexLogic((args) => {
       expect(args).toStrictEqual({
         where: undefined,
         orderBy: { id: Prisma.SortOrder.asc }
       })
       return Promise.resolve([message1, message2])
-    })
+    })(undefined)
     expect(view).toBe("index")
     expect(params).toStrictEqual({
       query: undefined,
@@ -65,13 +65,13 @@ describe("bbs#indexLogic", () => {
   })
 
   test("empty query 2", async () => {
-    const [view, params] = await bbs.indexLogic("", (args) => {
+    const [view, params] = await bbs.indexLogic((args) => {
       expect(args).toStrictEqual({
         where: undefined,
         orderBy: { id: Prisma.SortOrder.asc }
       })
       return Promise.resolve([message2, message3, message4])
-    })
+    })("")
     expect(view).toBe("index")
     expect(params).toStrictEqual({
       query: "",
